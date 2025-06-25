@@ -20,9 +20,6 @@ app.use(cors());
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// Middleware to parse URL-encoded bodies
-app.use(express.urlencoded({ extended: true }));
-
 // Middleware to log requests
 app.use((req, res, next) => {
   console.log(`${req.method} -- '${req.url}'`);

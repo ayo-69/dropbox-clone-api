@@ -1,17 +1,27 @@
 const express = require("express");
 const router = express.Router();
-
 require("dotenv").config();
 
+// JWT and bcrypt for authentication
 const bcrypt = require("bcrypt");
-
 const jwt = require("jsonwebtoken");
+
+// For validation
+const {registerSchema, loginSchema} = require("../utils/validation");
 
 const User = require("../models/User");
 
 // GET - /auth/register
 router.post("/register", async (req, res) => {
     try {
+        // Form validation
+        const { error } = registerSchema.validate(req.body);
+        if (error) {
+            const errorMessage = error.details[0].message;
+            console.error("Validation error:", errorMessage);
+            return res.status(400).json({ message: errorMessage });
+        }
+
         const { name, email, password } = req.body;
         console.log("Received registration data:", { name, email, password });
         const hashPassword = await bcrypt.hash(password, 10);
@@ -39,6 +49,14 @@ router.post("/register", async (req, res) => {
 // POST - /auth/login
 router.post("/login", async (req, res) => {
     try {
+        // Form validation
+        const { error } = loginSchema.validate(req.body);
+        if (error) {
+            const errorMessage = error.details[0].message;
+            console.error("Validation error:", errorMessage);
+            return res.status(400).json({ message: errorMessage });
+        }
+        
         const { email, password } = req.body;
         if (!email || !password) {
             return res.status(401).json({ message: "Invalid request"});
