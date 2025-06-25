@@ -1,8 +1,27 @@
 const express = require("express");
 const app = express();
 
+require("dotenv").config();
+
+// Connect to MongoDB
+const mongoose = require('mongoose');
+
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('✅ Connected to MongoDB on Railway'))
+.catch((err) => console.error('❌ Mongoose connection error:', err));
+
+// Middleware to handle CORS
+const cors = require("cors");
+app.use(cors());
+
 // Middleware to parse JSON bodies
 app.use(express.json());
+
+// Middleware to parse URL-encoded bodies
+app.use(express.urlencoded({ extended: true }));
 
 // Middleware to log requests
 app.use((req, res, next) => {
@@ -10,10 +29,11 @@ app.use((req, res, next) => {
     next(); 
 });
 
-// Sample route
-app.get("/", (req, res) => {
-    res.send("Hello, World!");
-});
+// Routes
+app.use("/auth", require("./routes/auth"));
+
+// To test the auth middleware
+app.use("/secure", require("./routes/test"));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
