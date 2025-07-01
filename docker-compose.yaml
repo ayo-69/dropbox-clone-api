@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  backend:
+    container_name: node_backend
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/mydatabase
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+    depends_on:
+      - mongo
+      - minio
+
+  mongo:
+    container_name: mongodb
+    image: mongo:latest
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  minio:
+    container_name: minio
+    image: minio/minio:latest
+    restart: always
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # MinIO Console
+    volumes:
+      - minio_data:/data
+
+volumes:
+  mongo_data:
+  minio_data:
