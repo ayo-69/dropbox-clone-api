@@ -4,8 +4,16 @@ const fileSchema = new mongoose.Schema({
     name: {
         type: String,
     },
+    hashName: {
+        type: String,
+        unique: true, // Ensure that the hash name is unique
+    },
     size: {
         type: Number,
+    },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // Assuming you have a User model
     },
     dateUploaded: {
         type: Date,

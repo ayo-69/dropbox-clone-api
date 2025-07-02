@@ -44,10 +44,11 @@ Create a `.env` file in `backend/` with:
 MONGO_URI=mongodb://mongo:27017/mydatabase
 JWT_SECRET=your_jwt_secret
 PORT=3000
+MINIO_BUCKET=your_bucket_name
 MINIO_ENDPOINT=your_endpoint
 MINIO_ACCESS_KEY=your_access_key
 MINIO_SECRET_KEY=your_secret_key
-
+MINIO_PORT=your_chosen_port
 ```
 
 > Note: `.env` is gitignored.
@@ -64,9 +65,18 @@ MINIO_SECRET_KEY=your_secret_key
 
 ### API Endpoints
 
+#### Auth 
 - `POST /auth/register` — Register a new user
 - `POST /auth/login` — Login and receive JWT
 - `GET /secure` — Protected route (requires Bearer token)
+
+#### Files
+ - `POST /files` — Upload a new file
+ - `GET /files` — Get all file metadata
+ - `GET /files/:filename` — Download a file
+ - `DELETE /files/:filename` — Delete a file
+
+> Note: All files endpoints are protected
 
 ### Stopping Services
 

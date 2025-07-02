@@ -9,8 +9,13 @@ const createMinioClient = require('../utils/file');
 const minioClient = createMinioClient();
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Authentication middleware
+const authMiddleware = require('../middleware/auth');
+
+const bycrypt = require('bcrypt');
+
 // POST /files
-router.post('/', upload.single("file"), (req, res) => {
+router.post('/', authMiddleware, upload.single("file"), async (req, res) => {
     if (!req.file) return res.status(400).send("No file uploaded");
 
     // Upload the file to MinIO
@@ -18,7 +23,9 @@ router.post('/', upload.single("file"), (req, res) => {
     const fileBuffer = req.file.buffer;
     const contentType = req.file.mimetype;
 
-    minioClient.putObject(process.env.MINIO_BUCKET, filename, fileBuffer, contentType, (err) => {
+    const { user } = req;
+    const hashName = await bycrypt.hash(filename + Date.now() + user._id, 10);
+    minioClient.putObject(process.env.MINIO_BUCKET, hashName, fileBuffer, contentType, (err) => {
         if (err) {
             console.error("Error uploading file:", err);
             return res.status(500).send("Error uploading file");
@@ -29,7 +36,9 @@ router.post('/', upload.single("file"), (req, res) => {
     // Save file metadata
     const fileData = new File({
         name: filename,
+        hashName: hashName,
         size: req.file.size,
+        userId: user._id,
         dateUploaded: Date.now(),
     });
     fileData.save()
@@ -42,10 +51,13 @@ router.post('/', upload.single("file"), (req, res) => {
 });
 
 // GET /files/:filename
-router.get("/:filename", (req, res) => {
+router.get("/:filename", authMiddleware, (req, res) => {
     const { filename } = req.params;
+    const { user } = req;
 
-    minioClient.getObject(process.env.MINIO_BUCKET, filename, (err, dataStream) => {
+    const file = File.findOne({ name: filename, userId: user._id });
+
+    minioClient.getObject(process.env.MINIO_BUCKET, file.hashName, (err, dataStream) => {
         if (err) {
             console.error("Error fetching file:", err);
             return res.status(404).send("File not found");
@@ -58,8 +70,8 @@ router.get("/:filename", (req, res) => {
 });
 
 // GET /files
-router.get("/", (req, res) => {
-    const files = File.find({})
+router.get("/", authMiddleware, (req, res) => {
+    const files = File.find({ userId: req.user._id })
     .then((files) => {
         res.status(200).json(files);
     })
@@ -69,11 +81,15 @@ router.get("/", (req, res) => {
     });
 });
 
-router.delete("/:filename", (req, res) => {
+// DELETE /files/:filename
+router.delete("/:filename", authMiddleware, (req, res) => {
     const { filename } = req.params;
 
+    const { user } = req;
+    const file = File.findOne({ name: filename, userId: user._id });
+
     // Delete file from MinIO
-    minioClient.removeObject(process.env.MINIO_BUCKET, filename, (err) => {
+    minioClient.removeObject(process.env.MINIO_BUCKET, file.hashName, (err) => {
         if (err) {
             console.error("Error deleting file from MinIO:", err);
             return res.status(500).send("Error deleting file");
