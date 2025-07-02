@@ -44,6 +44,10 @@ Create a `.env` file in `backend/` with:
 MONGO_URI=mongodb://mongo:27017/mydatabase
 JWT_SECRET=your_jwt_secret
 PORT=3000
+MINIO_ENDPOINT=your_endpoint
+MINIO_ACCESS_KEY=your_access_key
+MINIO_SECRET_KEY=your_secret_key
+
 ```
 
 > Note: `.env` is gitignored.

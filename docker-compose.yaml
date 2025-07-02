@@ -3,15 +3,21 @@ version: "3.8"
 services:
   backend:
     container_name: node_backend
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
-      - MONGO_URL=mongodb://mongo:27017/mydatabase
+      - MONGO_URI=mongodb://mongo:27017/mydatabase
       - MINIO_ENDPOINT=minio
+      - MINIO_ENDPOINT=http://localhost:9000
+      - MINIO_BUCKET=mybucket
       - MINIO_PORT=9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
+      - JWT_SECRET=mysecretkey
+
     depends_on:
       - mongo
       - minio
@@ -19,7 +25,7 @@ services:
   mongo:
     container_name: mongodb
     image: mongo:latest
-    restart: always
+    restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:
